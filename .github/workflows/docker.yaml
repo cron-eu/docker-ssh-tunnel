@@ -3,11 +3,14 @@ name: 'build images'
 
 on:
   push:
-    tags:
-      - "*"
+#    tags:
+#      - "*"
+    branches:
+      - master
 
 jobs:
   docker:
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
