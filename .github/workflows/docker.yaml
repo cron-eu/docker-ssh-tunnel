@@ -20,18 +20,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: |
-            croneu/ssh-tunnel
-          flavor: |
-            latest=auto
-          tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
+          images: croneu/ssh-tunnel
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
