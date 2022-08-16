@@ -24,4 +24,4 @@ if [ ! -z "${SSH_PRIVATE_KEY}" ]; then
   chmod 600 $USER_HOME/.ssh/id_rsa
 fi
 
-exec ssh -4 -i $USER_HOME/.ssh/id_rsa -Nn ${TUNNEL_HOST}
+exec ssh -4 -g -i $USER_HOME/.ssh/id_rsa -Nn ${TUNNEL_HOST}
