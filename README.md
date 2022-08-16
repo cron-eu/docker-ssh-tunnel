@@ -1,46 +1,55 @@
-[![](https://images.microbadger.com/badges/image/cagataygurturk/docker-ssh-tunnel.svg)](https://microbadger.com/images/cagataygurturk/docker-ssh-tunnel)
-
 # Docker SSH Tunnel
 
-This Docker creates a simple SSH tunnel over a server. It is very useful when your container needs to access to an external protected resource. In this case this container might behave like a proxy to outer space inside your Docker network.
+This Docker creates a simple SSH tunnel over a server. It is very useful when your container needs
+to access to an external protected resource. In this case this container might behave like a proxy
+to outer space inside your Docker network.
 
-## Usage
+Configured completely via ENV variables
 
-1. First you should create a config file in your local directory. For simplicity you can create this file in `~/.ssh` in your local machine.
+## Configuration
 
-2. Inside `~/.ssh/config` put these lines:
+Copy `.env.example` to `.env.docker` or use these settings in your `docker-compose.yaml`:
 
+* `SSH_CONFIG`: The whole content of the `.ssh/config` file
+* `SSH_KNOWN_HOSTS`: The whole content of the `.ssh/known_hosts` file
+* `SSH_PRIVATE_KEY`: The SSH private key (in PEM format)
+* `TUNNEL_HOST`: A ssh host with the configured tunnel specification, configured in the SSH_CONFIG
+
+## Setup for a tunnel
+
+You configure the whole tunnel setup in your `SSH_CONFIG` (you can also use multiple
+hops, etc):
 ```
-    Host mysql-tunnel # You can use any name
-            HostName ssh-tunnel.corporate.tld # Tunnel 
-            IdentityFile ~/.ssh/id_rsa # Private key location
-            User cagatay.guertuerk # Username to connect to SSH service
-            ForwardAgent yes
-            TCPKeepAlive yes
-            ConnectTimeout 5
-            ServerAliveCountMax 10
-            ServerAliveInterval 15
-```
+SSH_CONFIG="
+Host mysql-tunnel
+	HostName tunnel-hop.tld
+	User tunnel-user
+	LocalForward 3306 tunneled-sql.corporate.internal.tld:3306
 
-3. Don't forget to put your private key (`id_rsa`) to `~/.ssh` folder.
-
-4. Now in `docker-compose.yml` you can define the tunnel as follows:
-
-```
-    version: '2'
-    services:
-      mysql:
-        image: cagataygurturk/docker-ssh-tunnel
-        volumes:
-          - $HOME/.ssh:/root/ssh:ro
-        environment:
-	  SSH_DEBUG: "-v"
-          TUNNEL_HOST: mysql-tunnel
-          REMOTE_HOST: tunneled-sql.corporate.internal.tld
-          LOCAL_PORT: 3306
-          REMOTE_PORT: 3306
+	#LogLevel VERBOSE
+	#StrictHostKeyChecking no
+	ExitOnForwardFailure yes
+	ForwardAgent yes
+	TCPKeepAlive yes
+	ConnectTimeout 5
+	ServerAliveCountMax 10
+	ServerAliveInterval 15
+"
 ```
 
-5. Run `docker-compose up -d`
+## Using with `docker-compose.yml`
 
-After you start up docker containers, any container in the same network will be able to access to tunneled mysql instance using ```tcp://mysql:3306```. Of course you can also expose port 3306 to be able to access to tunneled resource from your host machine.
+```yaml
+  version: '2'
+  services:
+    mysql:
+      image: cron-eu/ssh-tunnel
+      env_file:
+        - .env.docker
+      environment:
+        TUNNEL_HOST: mysql-tunnel
+```
+
+After you start up docker containers, any container in the same network will be able to access to
+tunneled mysql instance using ```tcp://mysql:3306```. Of course you can also expose port 3306 to
+be able to access to tunneled resource from your host machine.
