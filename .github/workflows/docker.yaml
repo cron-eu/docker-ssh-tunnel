@@ -21,6 +21,9 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: croneu/ssh-tunnel
+          tags: |
+            # set latest tag for master branch
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
